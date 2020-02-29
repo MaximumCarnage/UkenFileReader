@@ -3,133 +3,65 @@ using System.Collections.Generic;
 
 namespace UkenFileReaderProj
 {
-    
     static class Constants
     {
         //max number of possible input files
         public const int maxNumberOfFiles = 5;
     }
-    
 
     class Program
     {
-        
-       
         static void Main(string[] args)
         {
-
-            int count = 1;
-               
-            while ( count <= Constants.maxNumberOfFiles){
-                ReadSelectFile(count);
-                count++;
+            for(int count = 1; count <= Constants.maxNumberOfFiles; count++)
+            {
+                ReadSelectFile( count + ".txt");
             }
-
         }
 
-        //handles parsing strings that the user has input into int32 form, also catches any Format exception from a file having characters 
-        static int Parser(string input)
+        //This method will read a file and aggregate the number of unique values and the count of said values
+        static void ReadSelectFile(string fileName)
         {
-            int num = 0;
-            try
-            {
-                num = Int32.Parse(input);
-
-            }
-            catch (FormatException)
-            {
-                Console.WriteLine("Error this file containts characters");
-            }
-
-            return num;
-
-        }
-
-        //This method will take a user's input parameter and use it to determine which file the user wants to access and will output the appropriate information
-        static void ReadSelectFile(int userChoice)
-        {
-            
-            string[] lines = System.IO.File.ReadAllLines(@"..\..\..\src\"+userChoice+".txt");
-            List<Number> diffNums = new List<Number>();
-
-            bool dontAdd = false;
-            
+            string[] lines = System.IO.File.ReadAllLines(@"..\..\..\src\"+ fileName);
+            IDictionary<int, int> numberCountDict = new Dictionary<int, int>();
+         
+        
             //Go through the entire list of lines from the file, and create a list of Number objects, to represent each individual number present in the file
             foreach(string element in lines)
             {
-                dontAdd = false;
-               int numElement = Parser(element);
-
-               if (diffNums.Count == 0)
+                int numElement = Int32.Parse(element);
+               
+                if (numberCountDict.ContainsKey(numElement))
                 {
-                    diffNums.Add(new Number(numElement,0));
-                    dontAdd = true;
+                    numberCountDict[numElement] = numberCountDict[numElement]+1;
                 }
                 else
                 {
-                    for(int i = 0; i < diffNums.Count; i++)
-                    {
-                        if(numElement == diffNums[i].number)
-                        {
-                            dontAdd = true;
-                        }
-                    }
-                }
-
-                if (!dontAdd)
-                {
-                    diffNums.Add(new Number(numElement, 0));
-                }
-                
-            }
-
-           //go through the list and count up the occurences of each number
-            foreach(Number element in diffNums)
-            {
-                foreach(string lineStr in lines)
-                {
-                    if(Parser(lineStr) == element.number)
-                    {
-                        element.count++;
-                    }
+                    numberCountDict.Add(numElement, 1);
                 }
 
             }
 
             //Calculates which of the numbers occurs the fewest times, in the event of a tie, it will use the lowest number value
-            int lowestCount = 100;
+            int lowestCount = Int32.MaxValue;
             int lowestNum = 0;
-            foreach(Number element in diffNums)
+            foreach(KeyValuePair<int,int> element in numberCountDict)
             {
-                if (element.count == lowestCount)
+                if (element.Value == lowestCount)
                 {
-                    if (element.number < lowestNum)
+                    if (element.Key < lowestNum)
                     {
-                        lowestNum = element.number;
+                        lowestNum = element.Key;
                     }
 
                 }
-                if (element.count < lowestCount)
+                if (element.Value < lowestCount)
                 {
-                    lowestCount = element.count;
-                    lowestNum = element.number;
+                    lowestCount = element.Value;
+                    lowestNum = element.Key;
                 }
             }
-            Console.WriteLine("File: "+userChoice+".txt, Number: "+lowestNum+" Repeated: "+lowestCount+ " time(s)");
-        }
-    }
-
-    //this class is used to have each number that appears in the file and gives each instance of itself a number value and a count representing amount of times it has occured
-    public class Number
-    {
-        public int number;
-        public int count;
-   
-
-        public Number(int num,int count )
-        {
-            this.number = num;
-            this.count = count;
+            Console.WriteLine("File: " + fileName + ", Number: "+lowestNum+" Repeated: "+lowestCount+ " time(s)");
         }
     }
 }
